@@ -2,7 +2,10 @@
 <resources>
 
     <string name="app_name">CollageMe</string>
-    <string name="hello_world">Hello world!</string>
+
+    <string name="btn_collage">Давай коллаж</string>
+    <string name="nickname_hint">Никнейм в Instagram</string>
+
     <string name="action_settings">Settings</string>
 
 </resources>
