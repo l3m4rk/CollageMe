@@ -24,6 +24,7 @@
         android:text="@string/btn_collage"
         android:id="@+id/button"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:onClick="onCollageCreate" />
 
 </RelativeLayout>
