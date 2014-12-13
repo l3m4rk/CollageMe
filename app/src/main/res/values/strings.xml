@@ -2,10 +2,13 @@
 <resources>
 
     <string name="app_name">CollageMe</string>
-
     <string name="btn_collage">Давай коллаж</string>
     <string name="nickname_hint">Никнейм в Instagram</string>
-
     <string name="action_settings">Settings</string>
+    <string name="title_activity_photo_picker">Какие нравятся больше всего?</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="change_image">Я выбираю их</string>
+    <string name="title_activity_collage_sender">Вот такой коллаж получился</string>
+    <string name="btn_email_send">Отослать на почту!</string>
 
 </resources>

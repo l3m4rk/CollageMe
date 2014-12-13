@@ -1,39 +1,49 @@
 package com.example.android.collageme;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
+
+    private static final String APP_NAME = "CollageMe";
+
 
     private static final String CLIENT_ID = "3c1e20ba1ae246e0b7bc2c602b72d6ee";
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    private RetriveDataTask task;
     private EditText nickEdit;
+    private Intent intent;
+    private List<String> urls = new ArrayList<String>();
 
     private long userId;
 
@@ -41,36 +51,9 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        task = new RetriveDataTask();
         nickEdit = (EditText) findViewById(R.id.nickname);
 
-
-        //get rid of it at the end
-        nickEdit.setText("iskorrrka");
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
 
 
     public void onCollageCreate(View view) {
@@ -81,29 +64,41 @@ public class MainActivity extends ActionBarActivity {
             Toast.makeText(this, "Введите логин!", Toast.LENGTH_SHORT).show();
         } else {
 
-            //TODO: get user id from username
-            //TODO: сделать при помощи AsyncTask
-            task.execute(nickName);
+            ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
-            //TODO: get photos of current user
+            if (networkInfo != null && networkInfo.isConnected()) {
 
+                RetrieveDataTask task = new RetrieveDataTask();
+                task.execute(nickName);
+
+            } else {
+                Toast.makeText(this, "Подключение к сети не установлено!", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
-    class RetriveDataTask extends AsyncTask<String, Long, List<String>> {
+
+    class RetrieveDataTask extends AsyncTask<String, Long, List<String>> {
+
+        List<String> photoUrls;
+        List<String> photos = new ArrayList<String>();
+        private String nickName;
+        private String nameOfPersonFolder;
 
 
         @Override
         protected List<String> doInBackground(String... params) {
 
-            String nickName = nickEdit.getText().toString();
-            List<String> photoUrls;
+            nickName = params[0];
+            nameOfPersonFolder = "/" + nickName;
 
             try {
 
                 String userIdRequest = "https://api.instagram.com/v1/users/search?q=" + nickName + "&client_id=" + CLIENT_ID;
                 String response = getJsonData(userIdRequest);
                 userId = getUserIdFromJson(response);
+
                 Log.d(LOG_TAG, "This '" + nickName + "' userId = " + userId);
 
                 String photoUrlRequest = "https://api.instagram.com/v1/users/" + userId + "/media/recent/?client_id=" + CLIENT_ID;
@@ -111,15 +106,34 @@ public class MainActivity extends ActionBarActivity {
 
                 photoUrls = getPhotoUrlsFromJson(photoUrlResponse);
 
-                for (String photoUrl : photoUrls) {
-                    Log.d(LOG_TAG, photoUrl);
+                for (int i = 0; i < photoUrls.size(); i++) {
+                    try {
+                        Bitmap bmp = Picasso.with(getApplicationContext()).load(photoUrls.get(i)).get();
+                        photos.add(saveToInternalStorage(bmp, i));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-
-
+                return photos;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(List<String> urls) {
+            super.onPostExecute(urls);
+            if (urls.size() != 0) {
+                String[] strings = new String[urls.size()];
+
+                for (int i = 0; i < urls.size(); ++i)
+                    strings[i] = urls.get(i);
+                intent = new Intent(getApplicationContext(), PhotoPickerActivity.class);
+                intent.putExtra("photo", strings);
+                intent.putExtra("nickname", nickEdit.getText().toString());
+                startActivity(intent);
+            }
         }
 
         private String getJsonData(String request) {
@@ -136,7 +150,7 @@ public class MainActivity extends ActionBarActivity {
                 urlConnection.connect();
 
                 InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
+                StringBuilder buffer = new StringBuilder();
 
                 if (inputStream == null) return null;
 
@@ -173,7 +187,6 @@ public class MainActivity extends ActionBarActivity {
         final String DATA = "data";
         final String ID = "id";
 
-
         private long getUserIdFromJson(String jsonStr) throws JSONException {
 
             JSONObject dataJson = new JSONObject(jsonStr);
@@ -192,20 +205,44 @@ public class MainActivity extends ActionBarActivity {
             final String URL = "url";
 
             List<String> urls = new ArrayList<String>();
-            Log.d(this.getClass().getSimpleName(), jsonStr);
             JSONArray jsonArray = new JSONObject(jsonStr).getJSONArray(DATA);
 
             JSONObject jo;
             String url;
 
             for (int i = 0; i < jsonArray.length(); ++i) {
-                jo = jsonArray.getJSONObject(i).getJSONObject(IMAGES).getJSONObject(RES_2);
+                jo = jsonArray.getJSONObject(i).getJSONObject(IMAGES).getJSONObject(RES_3);
                 url = jo.get(URL).toString();
                 urls.add(url);
             }
 
             return urls;
         }
+
+        private String saveToInternalStorage(Bitmap bitmap, int number) {
+            String nameOfFolder = "/images";
+            nameOfFolder = "/" + APP_NAME + nameOfFolder;
+            String nameOfFile = "photo";
+            String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + nameOfFolder + nameOfPersonFolder;
+            File d = new File(filePath);
+
+            if (!d.exists()) {
+                d.mkdirs();
+            }
+
+            File file = new File(d, nameOfFile + number + ".jpg");
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(file);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                fos.flush();
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return file.getAbsolutePath();
+        }
+
 
     }
 
