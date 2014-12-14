@@ -30,6 +30,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -42,10 +43,8 @@ public class MainActivity extends Activity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private EditText nickEdit;
-    private Intent intent;
-    private List<String> urls = new ArrayList<String>();
 
-    private long userId;
+    private String nameOfFolder = "/" + APP_NAME + "/images";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +54,22 @@ public class MainActivity extends Activity {
 
     }
 
+    private void recursiveDelete(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles())
+                recursiveDelete(child);
+        }
+        fileOrDirectory.delete();
+    }
+
+    private void removeAllFilesFromDirectory(File d) {
+        String[] children = d.list();
+        if (children.length != 0) {
+            for (int i = 0; i < children.length; ++i)
+                new File(d, children[i]).delete();
+        }
+        Log.d(LOG_TAG, Arrays.toString(children));
+    }
 
     public void onCollageCreate(View view) {
 
@@ -96,13 +111,24 @@ public class MainActivity extends Activity {
             try {
 
                 String userIdRequest = "https://api.instagram.com/v1/users/search?q=" + nickName + "&client_id=" + CLIENT_ID;
+
+                Log.d(LOG_TAG, userIdRequest);
+
                 String response = getJsonData(userIdRequest);
-                userId = getUserIdFromJson(response);
+                long userId = getUserIdFromJson(response);
+
+                if (userId == 0) {
+                    return null;
+                }
 
                 Log.d(LOG_TAG, "This '" + nickName + "' userId = " + userId);
 
                 String photoUrlRequest = "https://api.instagram.com/v1/users/" + userId + "/media/recent/?client_id=" + CLIENT_ID;
                 String photoUrlResponse = getJsonData(photoUrlRequest);
+
+                if (photoUrlResponse == null) {
+                    return null;
+                }
 
                 photoUrls = getPhotoUrlsFromJson(photoUrlResponse);
 
@@ -124,15 +150,19 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(List<String> urls) {
             super.onPostExecute(urls);
-            if (urls.size() != 0) {
-                String[] strings = new String[urls.size()];
+            if (urls == null) {
+                Toast.makeText(MainActivity.this, "По указанному логину нет данных!", Toast.LENGTH_SHORT).show();
+            } else {
+                if (urls.size() != 0) {
+                    String[] strings = new String[urls.size()];
 
-                for (int i = 0; i < urls.size(); ++i)
-                    strings[i] = urls.get(i);
-                intent = new Intent(getApplicationContext(), PhotoPickerActivity.class);
-                intent.putExtra("photo", strings);
-                intent.putExtra("nickname", nickEdit.getText().toString());
-                startActivity(intent);
+                    for (int i = 0; i < urls.size(); ++i)
+                        strings[i] = urls.get(i);
+                    Intent intent = new Intent(getApplicationContext(), PhotoPickerActivity.class);
+                    intent.putExtra("photo", strings);
+                    intent.putExtra("nickname", nickEdit.getText().toString());
+                    startActivity(intent);
+                }
             }
         }
 
@@ -191,9 +221,14 @@ public class MainActivity extends Activity {
 
             JSONObject dataJson = new JSONObject(jsonStr);
             JSONArray dataJsonArray = dataJson.getJSONArray(DATA);
-            JSONObject object = dataJsonArray.getJSONObject(0);
 
-            return object.getLong(ID);
+
+            //TODO: check what that array consist correct USER json object
+            if (userExists(dataJsonArray, nickName)) {
+                JSONObject object = dataJsonArray.getJSONObject(0);
+                return object.getLong(ID);
+            } else
+                return 0;
         }
 
         private List<String> getPhotoUrlsFromJson(String jsonStr) throws JSONException {
@@ -205,9 +240,14 @@ public class MainActivity extends Activity {
             final String URL = "url";
 
             List<String> urls = new ArrayList<String>();
-            JSONArray jsonArray = new JSONObject(jsonStr).getJSONArray(DATA);
+
+            int code = new JSONObject(jsonStr).getJSONObject("meta").getInt("code");
+            Log.d(LOG_TAG, "Code = " + code);
+
 
             JSONObject jo;
+            JSONArray jsonArray = new JSONObject(jsonStr).getJSONArray(DATA);
+
             String url;
 
             for (int i = 0; i < jsonArray.length(); ++i) {
@@ -219,9 +259,18 @@ public class MainActivity extends Activity {
             return urls;
         }
 
+//        private boolean userNotFound() {
+//
+//        }
+
+//        private boolean userNot
+
+
+        private boolean userExists(JSONArray array, String username) {
+            return array.toString().contains("\"username\":\"" + username + "\"");
+        }
+
         private String saveToInternalStorage(Bitmap bitmap, int number) {
-            String nameOfFolder = "/images";
-            nameOfFolder = "/" + APP_NAME + nameOfFolder;
             String nameOfFile = "photo";
             String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + nameOfFolder + nameOfPersonFolder;
             File d = new File(filePath);

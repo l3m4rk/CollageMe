@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -15,7 +16,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class PhotoPickerActivity extends Activity {
@@ -24,7 +24,11 @@ public class PhotoPickerActivity extends Activity {
 
     private static final String DEBUG_TAG = PhotoPickerActivity.class.getSimpleName();
 
-    private ArrayList<ImageView> imageItems = new ArrayList<ImageView>();
+    private ArrayList<PhotoItem> photoItems = new ArrayList<PhotoItem>();
+    private ArrayList<ImageView> selected = new ArrayList<>();
+    PhotoAdapter adapter;
+    ListView listView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,33 +40,38 @@ public class PhotoPickerActivity extends Activity {
 
         Log.d(DEBUG_TAG, "Photos count = " + photos.length);
 
+        PhotoItem photoItem;
+
         for (int i = 0; i < photos.length; i++) {
-
-//            Log.d(DEBUG_TAG, photos[i]);
-
             ImageView imageView = new ImageView(this);
             imageView.setImageBitmap(loadImage(photos[i]));
 //            File file = new File(photos[i]);
 //            Picasso.with(this).load(file).into(imageView);
-
-//            imageItems.add(new ImageItem(false, imageView, photos[i]));
-            imageItems.add(imageView);
+            photoItem = new PhotoItem();
+            photoItem.view = imageView;
+            photoItem.checked = false;
+            photoItems.add(photoItem);
         }
 
-        ImageViewList adapter = new ImageViewList(this, R.id.listView, imageItems.toArray(new ImageView[imageItems.size()]));
+        adapter = new PhotoAdapter(this, R.id.listView, photoItems.toArray(new PhotoItem[photoItems.size()]));
 
-        ListView listView = (ListView) findViewById(R.id.listView);
+        listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
-
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                adapter.toggleSelection(position);
+            }
+        });
     }
-
 
     public void buildCollage(View view) {
-        Toast.makeText(this, "А здесь мы будем делать коллаж! Только вот ХУЙ ЗНАЕТ КАК!", Toast.LENGTH_SHORT).show();
+        int photoCount = adapter.getSelectedItems().size();
+        Toast.makeText(PhotoPickerActivity.this, "Ты выбрал всего " + photoCount + "  объектов", Toast.LENGTH_SHORT).show();
 
-//        showSelected();
+//        Intent intent = new Intent(PhotoPickerActivity.this, CollageSenderActivity.class);
+//        startActivity(intent);
     }
-
 
     private Bitmap loadImage(String path) {
         try {
@@ -84,14 +93,7 @@ public class PhotoPickerActivity extends Activity {
         return null;
     }
 
-    private void removeAllFilesFromDirectory(File d) {
-        String[] children = d.list();
-        if (children.length != 0) {
-            for (int i = 0; i < children.length; ++i)
-                new File(d, children[i]).delete();
-        }
-        Log.d(DEBUG_TAG, Arrays.toString(children));
-    }
+
 
 
 }
