@@ -16,6 +16,8 @@ import java.util.List;
  */
 public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
 
+    private final static String DEBUG_TAG = PhotoAdapter.class.getSimpleName();
+
     private final Activity context;
     private final PhotoItem[] photoItems;
     private List<PhotoItem> selectedPhotos;
@@ -65,6 +67,7 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
             item.checked = true;
             Log.d(this.getClass().getSimpleName(), "Item " + position + " select!");
         }
+        Log.d(DEBUG_TAG, "Ты выбрал всего " + getSelectedItems().size() + "  объектов");
     }
 
 

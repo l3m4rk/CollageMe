@@ -115,6 +115,11 @@ public class MainActivity extends Activity {
                 Log.d(LOG_TAG, userIdRequest);
 
                 String response = getJsonData(userIdRequest);
+
+                if (response == null) {
+                    return null;
+                }
+
                 long userId = getUserIdFromJson(response);
 
                 if (userId == 0) {
@@ -170,7 +175,7 @@ public class MainActivity extends Activity {
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
-            String dataJsonString = null;
+            String dataJsonString;
 
             try {
                 URL url = new URL(request);
@@ -222,8 +227,6 @@ public class MainActivity extends Activity {
             JSONObject dataJson = new JSONObject(jsonStr);
             JSONArray dataJsonArray = dataJson.getJSONArray(DATA);
 
-
-            //TODO: check what that array consist correct USER json object
             if (userExists(dataJsonArray, nickName)) {
                 JSONObject object = dataJsonArray.getJSONObject(0);
                 return object.getLong(ID);
@@ -259,13 +262,6 @@ public class MainActivity extends Activity {
             return urls;
         }
 
-//        private boolean userNotFound() {
-//
-//        }
-
-//        private boolean userNot
-
-
         private boolean userExists(JSONArray array, String username) {
             return array.toString().contains("\"username\":\"" + username + "\"");
         }
@@ -280,6 +276,8 @@ public class MainActivity extends Activity {
             }
 
             File file = new File(d, nameOfFile + number + ".jpg");
+            if (file.exists())
+                file.delete();
             FileOutputStream fos = null;
             try {
                 fos = new FileOutputStream(file);
