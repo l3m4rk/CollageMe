@@ -70,10 +70,6 @@ public class CollageSenderActivity extends Activity {
 
     public void sendEmail(View view) {
 
-        //TODO get path to collage from bundle
-
-        Log.d(LOG_TAG, "Received path = " + pathToCollage);
-
         String subject = "Great collage from CollageMe!";
         String message = "Test message!";
         Intent email = new Intent(Intent.ACTION_SEND);
@@ -82,6 +78,7 @@ public class CollageSenderActivity extends Activity {
         email.putExtra(Intent.EXTRA_TEXT, message);
 
         Log.d(LOG_TAG, "Path to collage file " + pathToCollage);
+
         email.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + pathToCollage));
 
         email.setType("message/rfc822");

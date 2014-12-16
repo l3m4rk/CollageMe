@@ -10,10 +10,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
@@ -45,33 +45,21 @@ public class MainActivity extends Activity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private EditText nickEdit;
+    private RelativeLayout mainLayout;
+
 
     private String nameOfFolder = "/" + APP_NAME + "/images";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
         nickEdit = (EditText) findViewById(R.id.nickname);
 
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
-    }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onMenuItemSelected(int featureId, MenuItem item) {
-        return super.onMenuItemSelected(featureId, item);
-    }
 
     private void recursiveDelete(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory()) {
@@ -93,6 +81,10 @@ public class MainActivity extends Activity {
     public void onCollageCreate(View view) {
 
         String nickName = nickEdit.getText().toString();
+
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(nickEdit.getWindowToken(), 0);
+
 
         if (nickName.isEmpty()) {
             Toast.makeText(this, "Введите логин!", Toast.LENGTH_SHORT).show();

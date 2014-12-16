@@ -76,16 +76,8 @@ public class PhotoPickerActivity extends Activity {
     public void buildCollageClick(View view) {
 
         selected = adapter.getSelectedItems();
-        int photoCount = selected.size();
-
-
         Bitmap collage = createCollageFromImages(selected);
-
-        //save collage to the user folder
-
-        //get path to collage
         String pathToCollage = saveToInternalStorage(collage);
-        //send collage path to third activity
         Intent intent = new Intent(this, CollageSenderActivity.class);
         intent.putExtra("collage_path", pathToCollage);
         startActivity(intent);
