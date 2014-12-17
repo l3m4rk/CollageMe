@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Environment;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,13 +31,13 @@ public class PhotoPickerActivity extends Activity {
 
     private static final String DEBUG_TAG = PhotoPickerActivity.class.getSimpleName();
 
-    private ArrayList<PhotoItem> photoItems = new ArrayList<PhotoItem>();
+    private ArrayList<PhotoItem> photoItems = new ArrayList<>();
     private List<PhotoItem> selected;
+
     private PhotoAdapter adapter;
-    private ListView listView;
+    private ListView photosListView;
 
     private String nameOfPersonFolder;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,36 +48,46 @@ public class PhotoPickerActivity extends Activity {
         photos = bundle.getStringArray("photo");
         nameOfPersonFolder = bundle.getString("nickname");
 
-        Log.d(DEBUG_TAG, "Photos count = " + photos.length);
-
         PhotoItem photoItem;
 
         for (String photo : photos) {
             ImageView imageView = new ImageView(this);
             imageView.setImageBitmap(loadImage(photo));
-//            File file = new File(photos[i]);
-//            Picasso.with(this).load(file).into(imageView);
             photoItem = new PhotoItem();
-            photoItem.view = imageView;
-            photoItem.checked = false;
+            photoItem.photo = imageView;
+            photoItem.setSelected(false);
             photoItems.add(photoItem);
         }
 
-        adapter = new PhotoAdapter(this, R.id.listView, photoItems.toArray(new PhotoItem[photoItems.size()]));
+        photosListView = (ListView) findViewById(R.id.photos_list);
+        selected = new ArrayList<>();
 
-        listView = (ListView) findViewById(R.id.listView);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        adapter = new PhotoAdapter(this, R.layout.item, photoItems.toArray(new PhotoItem[photoItems.size()]));
+        photosListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        photosListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+
                 adapter.toggleSelection(position);
+
+                view.setBackgroundColor(adapter.getItem(position).isSelected() ? Color.RED : Color.TRANSPARENT);
+
+                Log.d(DEBUG_TAG, "Ты выбрал всего " + adapter.getSelectedItems().size() + "  объектов");
             }
         });
+        photosListView.setAdapter(adapter);
     }
 
     public void buildCollageClick(View view) {
 
         selected = adapter.getSelectedItems();
+        if (selected.size() == 0) {
+            Toast.makeText(this, "Выберите хотя бы одну фотографию!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Log.d(DEBUG_TAG, "Всего выбрано " + selected.size());
+
         Bitmap collage = createCollageFromImages(selected);
         String pathToCollage = saveToInternalStorage(collage);
         Intent intent = new Intent(this, CollageSenderActivity.class);
@@ -88,9 +100,8 @@ public class PhotoPickerActivity extends Activity {
 
         int photoCount = selected.size();
 
-
-        int width = ((BitmapDrawable) selected.get(0).view.getDrawable()).getBitmap().getWidth();
-        int height = ((BitmapDrawable) selected.get(0).view.getDrawable()).getBitmap().getHeight();
+        int width = ((BitmapDrawable) selected.get(0).photo.getDrawable()).getBitmap().getWidth();
+        int height = ((BitmapDrawable) selected.get(0).photo.getDrawable()).getBitmap().getHeight();
 
 
         //TODO: at this moment it will work for even count of photos only
@@ -105,7 +116,7 @@ public class PhotoPickerActivity extends Activity {
             Bitmap currentBitmap;
             for (int rows = 0; rows < ROWS; rows++) {
                 for (int cols = 0; cols < COLUMNS; cols++) {
-                    currentBitmap = ((BitmapDrawable) selected.get(count).view.getDrawable()).getBitmap();
+                    currentBitmap = ((BitmapDrawable) selected.get(count).photo.getDrawable()).getBitmap();
                     canvas.drawBitmap(currentBitmap, width * cols, height * rows, null);
                     count++;
                 }

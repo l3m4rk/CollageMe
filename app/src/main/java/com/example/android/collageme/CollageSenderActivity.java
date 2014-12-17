@@ -21,10 +21,8 @@ import java.io.File;
 
 public class CollageSenderActivity extends Activity {
 
-    //TODO maybe move to OPTIONS
     private static String EMAIL;
 
-    private static final int ID_PREF = 101;
     private static final String LOG_TAG = CollageSenderActivity.class.getSimpleName();
     private String pathToCollage;
 

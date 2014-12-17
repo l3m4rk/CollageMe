@@ -7,7 +7,14 @@ import android.widget.ImageView;
  */
 public class PhotoItem {
 
-    public ImageView view;
-    public boolean checked;
+    public ImageView photo;
+    private boolean selected;
 
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
 }

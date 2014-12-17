@@ -57,9 +57,9 @@ public class MainActivity extends Activity {
 
         nickEdit = (EditText) findViewById(R.id.nickname);
 
+        nickEdit.setText("iskorrrka");
+
     }
-
-
 
     private void recursiveDelete(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory()) {

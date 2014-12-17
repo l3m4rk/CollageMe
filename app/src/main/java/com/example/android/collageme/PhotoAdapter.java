@@ -1,6 +1,8 @@
 package com.example.android.collageme;
 
 import android.app.Activity;
+import android.content.Context;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,11 +18,13 @@ import java.util.List;
  */
 public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
 
+    private View currentViewSelected;
+
     private final static String DEBUG_TAG = PhotoAdapter.class.getSimpleName();
 
     private final Activity context;
     private final PhotoItem[] photoItems;
-    private List<PhotoItem> selectedPhotos;
+    private int currentSelected;
 
     public PhotoAdapter(Activity context, int resource, PhotoItem[] photoItems) {
         super(context, resource, photoItems);
@@ -28,47 +32,45 @@ public class PhotoAdapter extends ArrayAdapter<PhotoItem> {
         this.photoItems = photoItems;
     }
 
+    private int selectedPosition = -1;
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View view = null;
+        View view = convertView;
 
-        if (convertView == null) {
-            LayoutInflater inflater = context.getLayoutInflater();
-            view = inflater.inflate(R.layout.item, null);
-            final PhotoItem photoItem = new PhotoItem();
-            photoItem.view = (ImageView) view.findViewById(R.id.item_image);
-            photoItem.checked = false;
-            view.setTag(photoItem);
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        } else {
-            view = convertView;
+        if (view == null) {
+            view = inflater.inflate(R.layout.item, parent, false);
+
         }
-        PhotoItem photoItem = (PhotoItem) view.getTag();
-        photoItem.view.setImageDrawable(photoItems[position].view.getDrawable());
-        photoItem.checked = false;
+
+        if (photoItems[position].isSelected()) {
+            Log.d(DEBUG_TAG, "Item " + position + " selected!");
+            view.setBackgroundColor(Color.RED);
+        } else {
+            Log.d(DEBUG_TAG, "Item " + position + " not selected!");
+            view.setBackgroundColor(Color.TRANSPARENT);
+        }
+
+        ImageView imageView = (ImageView) view.findViewById(R.id.item_image);
+        imageView.setImageDrawable(photoItems[position].photo.getDrawable());
         return view;
     }
 
     public List<PhotoItem> getSelectedItems() {
-        selectedPhotos = new ArrayList<>();
+        ArrayList<PhotoItem> selectedPhotos = new ArrayList<>();
         for (PhotoItem photoItem : photoItems) {
-            if (photoItem.checked)
+            if (photoItem.isSelected())
                 selectedPhotos.add(photoItem);
         }
         return selectedPhotos;
     }
 
     public void toggleSelection(int position) {
-        PhotoItem item = photoItems[position];
-        if (item.checked) {
-            item.checked = false;
-            Log.d(this.getClass().getSimpleName(), "Item " + position + " deselect!");
-        } else {
-            item.checked = true;
-            Log.d(this.getClass().getSimpleName(), "Item " + position + " select!");
-        }
-        Log.d(DEBUG_TAG, "Ты выбрал всего " + getSelectedItems().size() + "  объектов");
-    }
+        photoItems[position].setSelected(!photoItems[position].isSelected());
 
+        Log.d(this.getClass().getSimpleName(), "Item " + position + (!photoItems[position].isSelected() ? " deselect!" : " select!"));
+    }
 
 }
