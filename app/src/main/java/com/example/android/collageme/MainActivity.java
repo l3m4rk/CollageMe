@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
@@ -39,15 +38,10 @@ import java.util.List;
 public class MainActivity extends Activity {
 
     private static final String APP_NAME = "CollageMe";
-
-
     private static final String CLIENT_ID = "3c1e20ba1ae246e0b7bc2c602b72d6ee";
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private EditText nickEdit;
-    private RelativeLayout mainLayout;
-
-
     private String nameOfFolder = "/" + APP_NAME + "/images";
 
     @Override
@@ -56,9 +50,6 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         nickEdit = (EditText) findViewById(R.id.nickname);
-
-        nickEdit.setText("iskorrrka");
-
     }
 
     private void recursiveDelete(File fileOrDirectory) {
@@ -84,7 +75,6 @@ public class MainActivity extends Activity {
 
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(nickEdit.getWindowToken(), 0);
-
 
         if (nickName.isEmpty()) {
             Toast.makeText(this, "Введите логин!", Toast.LENGTH_SHORT).show();
@@ -112,7 +102,6 @@ public class MainActivity extends Activity {
         private String nickName;
         private String nameOfPersonFolder;
 
-
         @Override
         protected List<String> doInBackground(String... params) {
 
@@ -122,9 +111,6 @@ public class MainActivity extends Activity {
             try {
 
                 String userIdRequest = "https://api.instagram.com/v1/users/search?q=" + nickName + "&client_id=" + CLIENT_ID;
-
-                Log.d(LOG_TAG, userIdRequest);
-
                 String response = getJsonData(userIdRequest);
 
                 if (response == null) {
@@ -136,8 +122,6 @@ public class MainActivity extends Activity {
                 if (userId == 0) {
                     return null;
                 }
-
-                Log.d(LOG_TAG, "This '" + nickName + "' userId = " + userId);
 
                 String photoUrlRequest = "https://api.instagram.com/v1/users/" + userId + "/media/recent/?client_id=" + CLIENT_ID;
                 String photoUrlResponse = getJsonData(photoUrlRequest);
@@ -178,6 +162,8 @@ public class MainActivity extends Activity {
                     intent.putExtra("photo", strings);
                     intent.putExtra("nickname", nickEdit.getText().toString());
                     startActivity(intent);
+                } else {
+                    Toast.makeText(MainActivity.this, "У данного пользователя нет фотографий!", Toast.LENGTH_SHORT).show();
                 }
             }
         }

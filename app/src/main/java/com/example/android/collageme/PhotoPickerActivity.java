@@ -98,8 +98,6 @@ public class PhotoPickerActivity extends Activity {
         int width = ((BitmapDrawable) selected.get(0).photo.getDrawable()).getBitmap().getWidth();
         int height = ((BitmapDrawable) selected.get(0).photo.getDrawable()).getBitmap().getHeight();
 
-
-        //TODO: at this moment it will work for even count of photos only
         if (photoCount % 2 == 0) {
 
             final int COLUMNS = 2;
@@ -122,7 +120,6 @@ public class PhotoPickerActivity extends Activity {
                 Log.v(DEBUG_TAG, e.toString());
             }
         } else {
-            Log.d(DEBUG_TAG, "Количество фотографий нечётное, нам ПИЗДА");
 
             photoCount--;
             int scaler = 2;
@@ -130,10 +127,9 @@ public class PhotoPickerActivity extends Activity {
             final int COLUMNS = photoCount / ROWS;
 
             try {
-                Bitmap rightBitmap = Bitmap.createBitmap(width * COLUMNS, height * ROWS, Bitmap.Config.ARGB_8888);
-
-                //save first bmp for after adding
                 Bitmap firstBitmap = ((BitmapDrawable) selected.get(0).photo.getDrawable()).getBitmap();
+
+                Bitmap rightBitmap = Bitmap.createBitmap(width * COLUMNS, height * ROWS, Bitmap.Config.ARGB_8888);
                 Canvas canvas = new Canvas(rightBitmap);
                 int count = 1;
                 Bitmap currentBitmap;
@@ -156,10 +152,7 @@ public class PhotoPickerActivity extends Activity {
             } catch (Exception e) {
                 Log.v(DEBUG_TAG, e.toString());
             }
-
-
         }
-
         return bitmap;
     }
 
@@ -178,7 +171,7 @@ public class PhotoPickerActivity extends Activity {
         if (file.exists()) {
             file.delete();
         }
-        FileOutputStream fos = null;
+        FileOutputStream fos;
         try {
             fos = new FileOutputStream(file);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
@@ -189,7 +182,6 @@ public class PhotoPickerActivity extends Activity {
         }
         return file.getAbsolutePath();
     }
-
 
     private Bitmap loadImage(String path) {
         try {

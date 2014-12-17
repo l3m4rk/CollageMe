@@ -86,8 +86,4 @@ public class CollageSenderActivity extends Activity {
             Toast.makeText(this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
-
 }
