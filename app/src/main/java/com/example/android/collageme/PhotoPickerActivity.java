@@ -67,13 +67,8 @@ public class PhotoPickerActivity extends Activity {
         photosListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-
                 adapter.toggleSelection(position);
-
                 view.setBackgroundColor(adapter.getItem(position).isSelected() ? Color.RED : Color.TRANSPARENT);
-
-                Log.d(DEBUG_TAG, "Ты выбрал всего " + adapter.getSelectedItems().size() + "  объектов");
             }
         });
         photosListView.setAdapter(adapter);
@@ -105,25 +100,66 @@ public class PhotoPickerActivity extends Activity {
 
 
         //TODO: at this moment it will work for even count of photos only
-        final int COLUMNS = 2;
-        final int ROWS = photoCount / COLUMNS;
+        if (photoCount % 2 == 0) {
 
-        try {
-            bitmap = Bitmap.createBitmap(width * COLUMNS, height * ROWS, Bitmap.Config.ARGB_8888);
+            final int COLUMNS = 2;
+            final int ROWS = photoCount / COLUMNS;
 
-            Canvas canvas = new Canvas(bitmap);
-            int count = 0;
-            Bitmap currentBitmap;
-            for (int rows = 0; rows < ROWS; rows++) {
-                for (int cols = 0; cols < COLUMNS; cols++) {
-                    currentBitmap = ((BitmapDrawable) selected.get(count).photo.getDrawable()).getBitmap();
-                    canvas.drawBitmap(currentBitmap, width * cols, height * rows, null);
-                    count++;
+            try {
+                bitmap = Bitmap.createBitmap(width * COLUMNS, height * ROWS, Bitmap.Config.ARGB_8888);
+
+                Canvas canvas = new Canvas(bitmap);
+                int count = 0;
+                Bitmap currentBitmap;
+                for (int rows = 0; rows < ROWS; rows++) {
+                    for (int cols = 0; cols < COLUMNS; cols++) {
+                        currentBitmap = ((BitmapDrawable) selected.get(count).photo.getDrawable()).getBitmap();
+                        canvas.drawBitmap(currentBitmap, width * cols, height * rows, null);
+                        count++;
+                    }
                 }
+            } catch (Exception e) {
+                Log.v(DEBUG_TAG, e.toString());
             }
-        } catch (Exception e) {
-            Log.v(DEBUG_TAG, e.toString());
+        } else {
+            Log.d(DEBUG_TAG, "Количество фотографий нечётное, нам ПИЗДА");
+
+            photoCount--;
+            int scaler = 2;
+            final int ROWS = 2;
+            final int COLUMNS = photoCount / ROWS;
+
+            try {
+                Bitmap rightBitmap = Bitmap.createBitmap(width * COLUMNS, height * ROWS, Bitmap.Config.ARGB_8888);
+
+                //save first bmp for after adding
+                Bitmap firstBitmap = ((BitmapDrawable) selected.get(0).photo.getDrawable()).getBitmap();
+                Canvas canvas = new Canvas(rightBitmap);
+                int count = 1;
+                Bitmap currentBitmap;
+                for (int rows = 0; rows < ROWS; rows++) {
+                    for (int cols = 0; cols < COLUMNS; cols++) {
+                        currentBitmap = ((BitmapDrawable) selected.get(count).photo.getDrawable()).getBitmap();
+                        canvas.drawBitmap(currentBitmap, width * cols, height * rows, null);
+                        count++;
+                    }
+                }
+
+                Bitmap leftBitmap = Bitmap.createScaledBitmap(firstBitmap, width * scaler, height * scaler, true);
+                bitmap = Bitmap.createBitmap(leftBitmap.getWidth() + rightBitmap.getWidth(),
+                        leftBitmap.getHeight(), Bitmap.Config.ARGB_8888);
+                Canvas c = new Canvas(bitmap);
+
+                c.drawBitmap(leftBitmap, 0, 0, null);
+                c.drawBitmap(rightBitmap, leftBitmap.getWidth(), 0, null);
+
+            } catch (Exception e) {
+                Log.v(DEBUG_TAG, e.toString());
+            }
+
+
         }
+
         return bitmap;
     }
 
